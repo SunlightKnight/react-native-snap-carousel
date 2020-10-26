@@ -42,6 +42,7 @@ export default class Carousel extends Component {
         autoplay: PropTypes.bool,
         autoplayDelay: PropTypes.number,
         autoplayInterval: PropTypes.number,
+        autoplayIntervalEnd: PropTypes.number,
         callbackOffsetMargin: PropTypes.number,
         containerCustomStyle: ViewPropTypes ? ViewPropTypes.style : View.propTypes.style,
         contentContainerCustomStyle: ViewPropTypes ? ViewPropTypes.style : View.propTypes.style,
@@ -79,6 +80,7 @@ export default class Carousel extends Component {
         autoplay: false,
         autoplayDelay: 1000,
         autoplayInterval: 3000,
+        autoplayIntervalEnd: 5000,
         callbackOffsetMargin: 5,
         containerCustomStyle: {},
         contentContainerCustomStyle: {},
@@ -1092,7 +1094,9 @@ export default class Carousel extends Component {
     }
 
     startAutoplay () {
-        const { autoplayInterval, autoplayDelay } = this.props;
+        const { autoplayInterval, autoplayDelay, autoplayIntervalEnd } = this.props;
+        const { loopClonesPerSide } = this.props;
+
         this._autoplay = true;
 
         if (this._autoplaying) {
@@ -1102,11 +1106,24 @@ export default class Carousel extends Component {
         clearTimeout(this._autoplayTimeout);
         this._autoplayTimeout = setTimeout(() => {
             this._autoplaying = true;
-            this._autoplayInterval = setInterval(() => {
-                if (this._autoplaying) {
-                    this.snapToNext();
-                }
-            }, autoplayInterval);
+
+            let newIndex = this.currentIndex;
+            
+            if (loopClonesPerSide == newIndex + 1) {
+                this._autoplayInterval = setInterval(() => {
+                    if (this._autoplaying) {
+                        this.snapToNext();
+                    }
+                }, autoplayIntervalEnd);
+            } else {
+                this._autoplayInterval = setInterval(() => {
+                    if (this._autoplaying) {
+                        this.snapToNext();
+                    }
+                }, autoplayInterval);
+            }
+
+            
         }, autoplayDelay);
     }
 
@@ -1146,6 +1163,9 @@ export default class Carousel extends Component {
             }
             newIndex = 0;
         }
+
+        this.stopAutoplay()
+        this.startAutoplay()
         this._snapToItem(newIndex, animated, fireCallback);
     }
 
